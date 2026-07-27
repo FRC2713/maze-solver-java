@@ -1,0 +1,54 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and test
+        run: mvn -B verify
+
+      - name: Verify Java 8 bytecode (class file major version 52)
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/classcheck
+          unzip -o -q target/maze-solver.jar -d /tmp/classcheck
+          fail=0
+          while IFS= read -r -d '' f; do
+            major=$(od -An -t u1 -j 7 -N 1 "$f" | tr -d ' ')
+            if [ "$major" != "52" ]; then
+              echo "::error file=$f::class file major version $major, expected 52 (Java 8)"
+              fail=1
+            fi
+          done < <(find /tmp/classcheck -name '*.class' -print0)
+          exit $fail
+
+      - name: Check jar size budget
+        env:
+          MAX_BYTES: 1048576
+        run: |
+          set -euo pipefail
+          size=$(stat -c%s target/maze-solver.jar)
+          echo "jar size: $size bytes (budget: $MAX_BYTES)"
+          if [ "$size" -gt "$MAX_BYTES" ]; then
+            echo "::error::jar exceeds size budget ($size > $MAX_BYTES bytes) — this downloads into the browser on first run, keep it lean"
+            exit 1
+          fi
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: maze-solver-jar
+          path: target/maze-solver.jar
