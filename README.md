@@ -40,13 +40,22 @@ CI (`.github/workflows/build.yml`) additionally verifies, on every push:
 
 ## Project layout
 
+The student-facing API is a set of interfaces; the concrete implementations
+(the parts that read the bitmask) are the implementer's job.
+
 ```
 src/main/java/com/frc2713/mazesolver/
-  MazeSolver.java          the public API (interface)
-  Direction.java           N/S/E/W bitmask constants
-  DefaultMazeSolver.java   implementation — solving logic goes here
-src/test/java/...           unit tests
+  Cell.java        interface — one square, plain wallUp()/wallRight() queries
+  Robot.java       interface — walks the maze; canMoveRight()/moveRight()/atGoal()
+  Maze.java        interface — the maze, hands out Cells and a Robot
+  MazeSolver.java  interface — the ALGORITHM a student writes: solve(Robot)
+  Direction.java   N/S/E/W bitmask constants (implementer-facing only)
+src/test/java/...   unit tests
+
+  -- to implement (see CONTRACT.md) --
+  GridMaze + the Cell/Robot it returns   the concrete side, reading int[][]
 ```
 
-See [`CONTRACT.md`](CONTRACT.md) for the API contract shared with the lesson
-site.
+New students write a `MazeSolver` against `Robot`/`Cell` and never touch a
+bitmask. See [`CONTRACT.md`](CONTRACT.md) for the full API contract shared with
+the lesson site, including the `GridMaze` entry point the site depends on.
