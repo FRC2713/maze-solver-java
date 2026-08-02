@@ -40,13 +40,23 @@ CI (`.github/workflows/build.yml`) additionally verifies, on every push:
 
 ## Project layout
 
+The student-facing API is a set of interfaces plus the concrete `GridMaze` that
+reads the bitmask so students never have to.
+
 ```
 src/main/java/com/frc2713/mazesolver/
-  MazeSolver.java          the public API (interface)
-  Direction.java           N/S/E/W bitmask constants
-  DefaultMazeSolver.java   implementation — solving logic goes here
-src/test/java/...           unit tests
+  Direction.java          enum — UP/DOWN/LEFT/RIGHT, with bit()/opposite()/turns
+  Cell.java               interface — one square; wall(Direction) queries
+  Robot.java              interface — walks the maze; readWallSensor/drive/facing
+  Maze.java               interface — the maze, hands out Cells and a Robot
+  GridMaze.java           concrete Maze built from an int[][] (the site's entry point)
+  GridRobot/GridCell.java the Robot/Cell a GridMaze returns
+  MazeSolver.java         interface — a batch solver: int[][] solve(int[][])
+  DefaultMazeSolver.java  shipped MazeSolver (breadth-first, shortest path)
+src/test/java/...         unit tests
 ```
 
-See [`CONTRACT.md`](CONTRACT.md) for the API contract shared with the lesson
+Students drive a `Robot` (from `new GridMaze(grid).robot()`) with
+`readWallSensor(Direction)` / `drive(Direction)` and never touch a bitmask. See
+[`CONTRACT.md`](CONTRACT.md) for the full API contract shared with the lesson
 site.
