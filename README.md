@@ -40,22 +40,23 @@ CI (`.github/workflows/build.yml`) additionally verifies, on every push:
 
 ## Project layout
 
-The student-facing API is a set of interfaces; the concrete implementations
-(the parts that read the bitmask) are the implementer's job.
+The student-facing API is a set of interfaces plus the concrete `GridMaze` that
+reads the bitmask so students never have to.
 
 ```
 src/main/java/com/frc2713/mazesolver/
-  Cell.java        interface — one square, plain wallUp()/wallRight() queries
-  Robot.java       interface — walks the maze; canMoveRight()/moveRight()/atGoal()
-  Maze.java        interface — the maze, hands out Cells and a Robot
-  MazeSolver.java  interface — the ALGORITHM a student writes: solve(Robot)
-  Direction.java   N/S/E/W bitmask constants (implementer-facing only)
-src/test/java/...   unit tests
-
-  -- to implement (see CONTRACT.md) --
-  GridMaze + the Cell/Robot it returns   the concrete side, reading int[][]
+  Direction.java          enum — UP/DOWN/LEFT/RIGHT, with bit()/opposite()/turns
+  Cell.java               interface — one square; wall(Direction) queries
+  Robot.java              interface — walks the maze; readWallSensor/drive/facing
+  Maze.java               interface — the maze, hands out Cells and a Robot
+  GridMaze.java           concrete Maze built from an int[][] (the site's entry point)
+  GridRobot/GridCell.java the Robot/Cell a GridMaze returns
+  MazeSolver.java         interface — a batch solver: int[][] solve(int[][])
+  DefaultMazeSolver.java  shipped MazeSolver (breadth-first, shortest path)
+src/test/java/...         unit tests
 ```
 
-New students write a `MazeSolver` against `Robot`/`Cell` and never touch a
-bitmask. See [`CONTRACT.md`](CONTRACT.md) for the full API contract shared with
-the lesson site, including the `GridMaze` entry point the site depends on.
+Students drive a `Robot` (from `new GridMaze(grid).robot()`) with
+`readWallSensor(Direction)` / `drive(Direction)` and never touch a bitmask. See
+[`CONTRACT.md`](CONTRACT.md) for the full API contract shared with the lesson
+site.

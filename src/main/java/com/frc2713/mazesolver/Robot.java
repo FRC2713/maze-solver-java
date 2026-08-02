@@ -1,69 +1,55 @@
 package com.frc2713.mazesolver;
 
 /**
- * A robot that walks through the maze, one cell at a time.
+ * A robot that walks a {@link Maze} one cell at a time. It starts on the maze's
+ * start cell and knows only what's around it — never a bird's-eye view of the
+ * whole maze.
  *
- * <p>This is the main tool a student uses to write a solving algorithm. The
- * robot always sits in exactly one cell (its position). You ask whether it
- * <em>can</em> move a direction, and if so you tell it to move — for example:
- *
- * <pre>{@code
- * while (!robot.atGoal()) {
- *     if (robot.canMoveRight())      robot.moveRight();
- *     else if (robot.canMoveDown())  robot.moveDown();
- *     else                           robot.moveUp();
- * }
- * }</pre>
- *
- * <p>Directions are screen-relative (see {@link Cell}). A robot never needs to
- * know about bitmasks — it only knows where it is and which ways it can go.
+ * <p>The robot has two abilities, mirroring a real one: it can <em>sense</em> a
+ * wall on any side ({@link #readWallSensor}) and it can <em>drive</em> one cell
+ * in a direction ({@link #drive}). It also remembers one fact about itself —
+ * which way it last drove, its {@link #facing()} — because a robot that just
+ * moved up is now facing up.
  */
 public interface Robot {
 
-    /** The robot's current row (0-based); row 0 is the top. */
-    int row();
-
-    /** The robot's current column (0-based); column 0 is the left edge. */
-    int col();
-
-    /** The cell the robot is currently standing on. */
-    Cell cell();
-
-    /** {@code true} if there is no wall above and a cell to move into. */
-    boolean canMoveUp();
-
-    /** {@code true} if there is no wall below and a cell to move into. */
-    boolean canMoveDown();
-
-    /** {@code true} if there is no wall to the left and a cell to move into. */
-    boolean canMoveLeft();
-
-    /** {@code true} if there is no wall to the right and a cell to move into. */
-    boolean canMoveRight();
+    /**
+     * Reads the wall sensor on one side of the robot's current cell.
+     *
+     * @return {@code true} if that side is a wall (the robot cannot drive that
+     *         way), {@code false} if it is open
+     */
+    boolean readWallSensor(Direction dir);
 
     /**
-     * Step one cell up. Implementations should throw
-     * {@link IllegalStateException} if {@link #canMoveUp()} is {@code false},
-     * so a student learns to check before moving.
+     * Drives one cell in the given direction. If that side is a wall the robot
+     * stays put and nothing happens; otherwise it moves and its
+     * {@link #facing()} becomes {@code dir}.
      */
-    void moveUp();
+    void drive(Direction dir);
 
-    /** Step one cell down. See {@link #moveUp()} for the blocked-move rule. */
-    void moveDown();
+    /**
+     * The direction the robot last drove — the one fact it remembers about
+     * itself. Before it has moved, this is its initial heading.
+     */
+    Direction facing();
 
-    /** Step one cell left. See {@link #moveUp()} for the blocked-move rule. */
-    void moveLeft();
-
-    /** Step one cell right. See {@link #moveUp()} for the blocked-move rule. */
-    void moveRight();
-
-    /** {@code true} once the robot reaches the goal cell (bottom-right). */
+    /** Is the robot standing on the goal cell? */
     boolean atGoal();
 
+    /** The robot's current row (0 is the top row). */
+    int row();
+
+    /** The robot's current column (0 is the left column). */
+    int col();
+
+    /** The {@link Cell} the robot is currently standing on. */
+    Cell cell();
+
     /**
-     * Every cell the robot has stood on, in order, as {@code {row, col}} pairs —
-     * starting with the start cell and ending with its current cell. Handy for
-     * drawing the path the algorithm took.
+     * The trail of every cell the robot has stood on, in order, as
+     * {@code [row, col]} pairs starting with the start cell. A drive blocked by
+     * a wall adds no entry.
      */
     int[][] trail();
 }
